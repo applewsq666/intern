@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全屏随机动图</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+        img {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover; /* 填满全屏，裁剪多余部分 */
+            /* 如果想完整显示动图（可能有黑边），可以改为 object-fit: contain; */
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <img id="fullscreen-gif" src="" alt="随机动图">
+
+    <script>
+        // ✏️ 在这里修改你的两个动图链接
+        const links = [
+            'https://imagetourl.cloud/5enzbguv93s9.gif', // 示例动图1
+            'https://imagetourl.cloud/7kf3w35fqsbe.gif' // 示例动图2
+        ];
+
+        // 页面加载时随机选择一个动图并全屏播放
+        window.onload = function () {
+            const randomIndex = Math.floor(Math.random() * links.length);
+            document.getElementById('fullscreen-gif').src = links[randomIndex];
+        };
+    </script>
+</body>
+</html>
