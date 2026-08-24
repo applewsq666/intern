@@ -21,26 +21,39 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            object-fit: cover;
+            object-fit: cover; /* 或 contain，根据需求 */
             display: block;
         }
     </style>
 </head>
 <body>
-    <!-- 关键：添加 referrerpolicy="no-referrer" 避免防盗链 403 -->
     <img id="fullscreen-gif" src="" alt="随机动图" referrerpolicy="no-referrer">
 
     <script>
-        // ✏️ 在这里修改你的两个动图链接
+        // ✏️ 修改为你的两个动图链接
         const links = [
-            'https://img.remit.ee/api/file/CgACAgUAAyEGAASHRsPbAAEZyUBqjMB2dhwuNFP7Zimu1xdaNqZU7gAClSYAAg-uaVSKFQHTNw6v3T0E.gif',
-            'https://img.remit.ee/api/file/CgACAgUAAyEGAASHRsPbAAEZyUFqjMCdA4Vk1V9pt3i1cFmQH4rxEQACliYAAg-uaVRZ2AL96v1eZT0E.gif'
+            'https://img.remit.ee/api/file/CgACAgUAAyEGAASHRsPbAAEZyURqjMIy81Ah38fD1jczG_4-aUflpQACmSYAAg-uaVRovl1SmLDrZD0E.gif',
+            'https://img.remit.ee/api/file/CgACAgUAAyEGAASHRsPbAAEZyUBqjMB2dhwuNFP7Zimu1xdaNqZU7gAClSYAAg-uaVSKFQHTNw6v3T0E.gif'
         ];
 
-        window.onload = function () {
-            const randomIndex = Math.floor(Math.random() * links.length);
-            document.getElementById('fullscreen-gif').src = links[randomIndex];
+        const img = document.getElementById('fullscreen-gif');
+
+        img.onload = function() {
+            console.log('✅ GIF 加载成功，当前链接：', img.src);
         };
+
+        img.onerror = function() {
+            console.error('❌ GIF 加载失败，当前链接：', img.src);
+            // 可以自动尝试另一个链接
+        };
+
+        // 随机选择一个链接并加载
+        function loadRandomGif() {
+            const randomIndex = Math.floor(Math.random() * links.length);
+            img.src = links[randomIndex];
+        }
+
+        window.onload = loadRandomGif;
     </script>
 </body>
 </html>
