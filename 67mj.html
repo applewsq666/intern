@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mj</title>
+    <style>
+        /* ==================== 基础重置与全局样式 ==================== */
+        :root {
+            --glass-bg: rgba(0, 0, 0, 0.22);
+            --glass-bg-hover: rgba(0, 0, 0, 0.3);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-border-hover: rgba(255, 255, 255, 0.35);
+            --glass-highlight: rgba(255, 255, 255, 0.2);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --glass-inset-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.85);
+            --text-muted: rgba(255, 255, 255, 0.6);
+            --accent-1: #b48bf5;
+            --accent-2: #f58abf;
+            --accent-3: #6ed7e6;
+            --accent-4: #f7c46c;
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --radius-sm: 10px;
+            --transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            --text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6), 0 0 8px rgba(0, 0, 0, 0.3);
+            --mouse-x: 30%;
+            --mouse-y: 20%;
+            --rotate-x: 0deg;
+            --rotate-y: 0deg;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans', -apple-system, sans-serif;
+            min-height: 100vh;
+            background: #0a0a14;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            position: relative;
+            background-image: url('https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEZyKlqjIvNbJp7bPqmQCMZHHr3l0tuRgAC3yUAAg-uaVRlp-l7WQWatj0E.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+
+        /* ==================== 背景网格纹理 ==================== */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+            -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+            opacity: 0.4;
+        }
+
+        /* ==================== 玻璃态核心样式（深色半透明，提高可读性） ==================== */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--glass-shadow), var(--glass-inset-shadow);
+            position: relative;
+            transition: background 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                        border-color 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                        box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                        transform 0.15s ease-out;
+            overflow: hidden;
+            transform: perspective(1000px) rotateX(var(--rotate-x)) rotateY(var(--rotate-y)) translateY(0) scale(1);
+            will-change: transform;
+        }
+        .glass:hover {
+            background: var(--glass-bg-hover);
+            border-color: var(--glass-border-hover);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55), var(--glass-inset-shadow), 0 0 30px rgba(139, 92, 246, 0.2);
+        }
+
+        /* 动态跟随鼠标的高光 */
+        .glass::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(
+                circle at var(--mouse-x) var(--mouse-y),
+                rgba(255, 255, 255, 0.25) 0%,
+                rgba(255, 255, 255, 0.08) 30%,
+                transparent 60%
+            );
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .glass:hover::before {
+            opacity: 1;
+        }
+
+        /* 底部微光 */
+        .glass::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            right: 10%;
+            height: 30%;
+            border-radius: 50% 50% var(--radius-lg) var(--radius-lg);
+            background: linear-gradient(0deg, rgba(139, 92, 246, 0.06) 0%, transparent 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* 给所有卡片内文字添加更明显的阴影 */
+        .glass, .glass * {
+            text-shadow: var(--text-shadow);
+        }
+
+        /* ==================== 导航栏（加深背景，提高可读性） ==================== */
+        .navbar {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 10px 28px;
+            border-radius: 50px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(40px) saturate(200%);
+            -webkit-backdrop-filter: blur(40px) saturate(200%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 -1px 0 rgba(255, 255, 255, 0.1), 0 0 40px rgba(139, 92, 246, 0.15);
+            width: auto;
+            max-width: 95vw;
+            flex-wrap: wrap;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            text-shadow: var(--text-shadow);
+        }
+        .navbar:hover {
+            border-color: rgba(255, 255, 255, 0.25);
+            background: rgba(0, 0, 0, 0.4);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -1px 0 rgba(255, 255, 255, 0.15), 0 0 60px rgba(139, 92, 246, 0.25);
+        }
+        .navbar__logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.5), 0 0 60px rgba(139, 92, 246, 0.3);
+            animation: logoPulse 4s ease-in-out infinite;
+            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+        }
+        .navbar__logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .navbar__logo::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.4), transparent);
+            pointer-events: none;
+        }
+        @keyframes logoPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.5), 0 0 60px rgba(139, 92, 246, 0.3); }
+            50% { box-shadow: 0 0 35px rgba(236, 72, 153, 0.7), 0 0 80px rgba(236, 72, 153, 0.4); }
+        }
+        .navbar__title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #ffffff 30%, rgba(255, 255, 255, 0.9) 70%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            white-space: nowrap;
+            position: relative;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+        }
+        .navbar__title::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-2), transparent);
+            border-radius: 2px;
+            opacity: 0.8;
+        }
+        .navbar__links {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .navbar__link {
+            position: relative;
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-size: 0.92rem;
+            font-weight: 600;
+            padding: 8px 18px;
+            border-radius: 30px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 0.5px;
+            background: transparent;
+            border: 1px solid transparent;
+            overflow: hidden;
+            white-space: nowrap;
+            text-shadow: var(--text-shadow);
+        }
+        .navbar__link::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 30px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .navbar__link::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-1), var(--accent-2), var(--accent-3));
+            border-radius: 2px;
+            transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .navbar__link:hover {
+            color: #ffffff;
+            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), 0 0 20px rgba(139, 92, 246, 0.3);
+        }
+        .navbar__link:hover::before {
+            opacity: 1;
+        }
+        .navbar__link:hover::after {
+            width: 60%;
+        }
+
+        /* 新增的“其他”按钮样式 */
+        .navbar__other-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-family: inherit;
+            letter-spacing: 0.5px;
+            transition: all 0.3s;
+            white-space: nowrap;
+            text-shadow: var(--text-shadow);
+            text-decoration: none;
+            display: inline-block;
+        }
+        .navbar__other-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.35);
+        }
+
+        .navbar__clock {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            padding-left: 16px;
+            border-left: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            text-shadow: var(--text-shadow);
+        }
+        .navbar__clock::before {
+            content: '●';
+            position: absolute;
+            left: -4px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 6px;
+            color: var(--accent-3);
+            animation: clockDot 2s ease-in-out infinite;
+            text-shadow: none;
+        }
+        @keyframes clockDot {
+            0%, 100% { opacity: 0.5; transform: translateY(-50%) scale(1); }
+            50% { opacity: 1; transform: translateY(-50%) scale(1.5); }
+        }
+
+        /* ==================== 主内容区 ==================== */
+        .main-content {
+            position: relative;
+            z-index: 1;
+            padding: 140px 24px 60px;
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+        .page-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        .page-header__title {
+            font-size: 2.8rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #ffffff 30%, rgba(180, 139, 245, 0.9) 60%, rgba(245, 138, 191, 0.8) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+        .page-header__subtitle {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.9);
+            letter-spacing: 2px;
+            font-weight: 300;
+            text-shadow: var(--text-shadow);
+        }
+
+        /* ==================== 板块卡片网格 ==================== */
+        .sections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            perspective: 1200px;
+        }
+        .section-card {
+            padding: 28px 24px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            cursor: default;
+        }
+        .section-card__header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            z-index: 2;
+        }
+        .section-card__icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            transition: var(--transition);
+            overflow: hidden;
+        }
+        .section-card:hover .section-card__icon {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: scale(1.05) rotate(-3deg);
+        }
+        .section-card__icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .section-card__icon--video { box-shadow: 0 0 20px rgba(6, 182, 212, 0.5); }
+        .section-card__icon--game { box-shadow: 0 0 20px rgba(245, 158, 11, 0.5); }
+        .section-card__icon--mj { box-shadow: 0 0 20px rgba(139, 92, 246, 0.5); }
+        .section-card__icon--tools { box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
+        .section-card__title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            color: #ffffff;
+            text-shadow: var(--text-shadow);
+        }
+        .section-card__desc {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 0.3px;
+            text-shadow: var(--text-shadow);
+        }
+        .section-card__body {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* ==================== 网站按钮样式（提高可读性） ==================== */
+        .site-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.25);
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: var(--transition);
+            cursor: pointer;
+            letter-spacing: 0.3px;
+            position: relative;
+            overflow: hidden;
+            text-shadow: var(--text-shadow);
+        }
+        .site-btn:hover {
+            background: rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+        .site-btn:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        .site-btn__icon {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            transition: var(--transition);
+            overflow: hidden;
+        }
+        .site-btn__icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            border-radius: 10px;
+        }
+        .site-btn:hover .site-btn__icon {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.1);
+        }
+        .site-btn__text {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .site-btn__arrow {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.8rem;
+            transition: var(--transition);
+            opacity: 0.9;
+            text-shadow: none;
+        }
+        .site-btn:hover .site-btn__arrow {
+            opacity: 1;
+            transform: translateX(4px);
+        }
+
+        /* ==================== 页脚 ==================== */
+        .footer {
+            text-align: center;
+            padding: 40px 20px 30px;
+            position: relative;
+            z-index: 1;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            text-shadow: var(--text-shadow);
+        }
+        .footer a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+        .footer a:hover {
+            color: var(--accent-1);
+        }
+
+        /* ==================== 响应式设计 ==================== */
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 120px 14px 40px;
+            }
+            .page-header__title {
+                font-size: 2rem;
+            }
+            .sections-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .navbar {
+                top: 10px;
+                padding: 8px 16px;
+                gap: 10px;
+            }
+            .navbar__title {
+                font-size: 0.9rem;
+            }
+            .navbar__links {
+                gap: 4px;
+            }
+            .navbar__link {
+                font-size: 0.75rem;
+                padding: 6px 12px;
+            }
+            .navbar__other-btn {
+                font-size: 0.75rem;
+                padding: 6px 12px;
+            }
+            .navbar__clock {
+                font-size: 0.7rem;
+                padding-left: 10px;
+            }
+            .section-card {
+                padding: 20px 16px 18px;
+            }
+            .site-btn {
+                padding: 10px 12px;
+            }
+        }
+        @media (max-width: 480px) {
+            .page-header__title {
+                font-size: 1.6rem;
+            }
+            .navbar__clock {
+                display: none;
+            }
+            .navbar__title {
+                font-size: 0.8rem;
+            }
+            .navbar__links {
+                gap: 2px;
+            }
+            .navbar__link {
+                font-size: 0.7rem;
+                padding: 4px 8px;
+            }
+            .navbar__other-btn {
+                font-size: 0.7rem;
+                padding: 4px 10px;
+            }
+            .navbar__logo {
+                width: 32px;
+                height: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== 背景网格 ==================== -->
+    <div class="bg-grid"></div>
+
+    <!-- ==================== 导航栏 ==================== -->
+    <nav class="navbar">
+        <div class="navbar__logo">
+            <img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEZyKlqjIvNbJp7bPqmQCMZHHr3l0tuRgAC3yUAAg-uaVRlp-l7WQWatj0E.png" alt="Logo" />
+        </div>
+        <span class="navbar__title">mj666</span>
+        <div class="navbar__links">
+            <a href="#video" class="navbar__link">视频</a>
+            <a href="#game" class="navbar__link">游戏</a>
+            <a href="#mj" class="navbar__link">MJ</a>
+            <a href="#tools" class="navbar__link">工具</a>
+        </div>
+        <!-- 新增的“其他”按钮，跳转到百度 -->
+        <a class="navbar__other-btn" href="https://mj.wsq847.dpdns.org/mj" target="_blank" rel="noopener">其他</a>
+        <span class="navbar__clock" id="clock">--:--:--</span>
+    </nav>
+
+    <!-- ==================== 主内容区 ==================== -->
+    <main class="main-content">
+        <header class="page-header">
+            <h1 class="page-header__title">mjmjmjmjmjmjmjmjmjmjmjmjmjmjmjmjmj</h1>
+            <p class="page-header__subtitle">mj</p>
+        </header>
+
+        <div class="sections-grid">
+
+            <!-- ========== 视频板块 ========== -->
+            <div class="section-card glass" id="video">
+                <div class="section-card__header">
+                    <div class="section-card__icon section-card__icon--video">
+                        <img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEZyKlqjIvNbJp7bPqmQCMZHHr3l0tuRgAC3yUAAg-uaVRlp-l7WQWatj0E.png" alt="视频" />
+                    </div>
+                    <div>
+                        <div class="section-card__title">视频</div>
+                        <div class="section-card__desc"></div>
+                    </div>
+                </div>
+                <div class="section-card__body">
+                    <a class="site-btn" href="https://www.bilibili.com" target="_blank" rel="noopener">
+                        <span class="site-btn__icon"><img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEZyKlqjIvNbJp7bPqmQCMZHHr3l0tuRgAC3yUAAg-uaVRlp-l7WQWatj0E.png" alt="Bilibili" /></span>
+                        <span class="site-btn__text">哔哩哔哩 Bilibili</span>
+                        <span class="site-btn__arrow">↗</span>
+                    </a>
+
+                    <a class="site-btn" href="https://www.douyin.com/jingxuan" target="_blank" rel="noopener">
+                        <span class="site-btn__icon"><img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEZyKlqjIvNbJp7bPqmQCMZHHr3l0tuRgAC3yUAAg-uaVRlp-l7WQWatj0E.png" alt="抖音" /></span>
+                        <span class="site-btn__text">抖音 Douyin</span>
+                        <span class="site-btn__arrow">↗</span>
+                    </a>
+                    <a class="site-btn" href="https://v.qq.com" target="_blank" rel="noopener">
+                        <span class="site-btn__icon"><img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEZyKlqjIvNbJp7bPqmQCMZHHr3l0tuRgAC3yUAAg-uaVRlp-l7WQWatj0E.png" alt="腾讯视频" /></span>
+                        <span class="site-btn__text">腾讯视频</span>
+                        <span class="site-btn__arrow">↗</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- ========== 游戏板块 ========== -->
+            <div class="section-card glass" id="game">
+                <div class="section-card__header">
+                    <div class="section-card__icon section-card__icon--game">
+                        <img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEZyKlqjIvNbJp7bPqmQCMZHHr3l0tuRgAC3yUAAg-uaVRlp-l7WQWatj0E.png" alt="游戏" />
+                    </div>
+                    <div>
+                        <div class="section-card__title">游戏</div>
+                        <div class="section-card__desc">游戏平台 & 社区</div>
+                    </div>
+                </div>
+                <div class="section-card__body">
+                    <a class="site-btn" href="https://www.crazygames.com/" target="_blank" rel="noopener">
+                        <span class="site-btn__icon"><img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEZyKlqjIvNbJp7bPqmQCMZHHr3l0tuRgAC3yUAAg-uaVRlp-l7WQWatj0E.png" alt="Steam" /></span>
+                        <span class="site-btn__text">poki平替</span>
+                        <span class="site-btn__arrow">↗</span>
+                    </a>
+                    <a class="site-btn" href="https://poki.com" target="_blank" rel="noopener">
+                        <span class="site-btn__icon"><img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEZyKlqjIvNbJp7bPqmQCMZHHr3l0tuRgAC3yUAAg-uaVRlp-l7WQWatj0E.png" alt="Epic Games" /></span>
+                        <span class="site-btn__text">poki</span>
+                        <span class="site-btn__arrow">↗</span>
+                    </a>
+                    <a class="site-btn" href="https://sq.dl999.cn/" target="_blank" rel="noopener">
+                        <span class="site-btn__icon"><img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEZyKlqjIvNbJp7bPqmQCMZHHr3l0tuRgAC3yUAAg-uaVRlp-l7WQWatj0E.png" alt="TapTap" /></span>
+                        <span class="site-btn__text">抖音小游戏无广告</span>
+                        <span class="site-btn__arrow">↗</span>
+                    </a>
+                    <a class="site-btn" href="https://play-cs.com/" target="_blank" rel="noopener">
+                        <span class="site-btn__icon"><img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEZyKlqjIvNbJp7bPqmQCMZHHr3l0tuRgAC3yUAAg-uaVRlp-l7WQWatj0E.png" alt="4399" /></span>
+                        <span class="site-btn__text">csgo1.6</span>
+                        <span class="site-btn__arrow">↗</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- ========== MJ 板块 ========== -->
+            <div class="section-card glass" id="mj">
+                <div class="section-card__header">
+                    <div class="section-card__icon section-card__icon--mj">
+                        <img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEZyKlqjIvNbJp7bPqmQCMZHHr3l0tuRgAC3yUAAg-uaVRlp-l7WQWatj0E.png" alt="MJ" />
+                    </div>
+                    <div>
+                        <div class="section-card__title">MJ</div>
+                        <div class="section-card__desc"></div>
+                    </div>
+                </div>
+                <div class="section-card__body">
+                    <a class="site-btn" href="https://mj.wsq847.dpdns.org/mj67" target="_blank" rel="noopener">
+                        <span class="site-btn__icon"><img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEZyKlqjIvNbJp7bPqmQCMZHHr3l0tuRgAC3yUAAg-uaVRlp-l7WQWatj0E.png" alt="Midjourney" /></span>
+                        <span class="site-btn__text">mj</span>
+                        <span class="site-btn__arrow">↗</span>
+                    </a>
+                    <a class="site-btn" href="https://mj.wsq847.dpdns.org/mj67" target="_blank" rel="noopener">
+                        <span class="site-btn__icon"><img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEZyKlqjIvNbJp7bPqmQCMZHHr3l0tuRgAC3yUAAg-uaVRlp-l7WQWatj0E.png" alt="Stable Diffusion" /></span>
+                        <span class="site-btn__text">MJ</span>
+                        <span class="site-btn__arrow">↗</span>
+                    </a>
+                    <a class="site-btn" href="https://mj.wsq847.dpdns.org/mj67" target="_blank" rel="noopener">
+                        <span class="site-btn__icon"><img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEZyKlqjIvNbJp7bPqmQCMZHHr3l0tuRgAC3yUAAg-uaVRlp-l7WQWatj0E.png" alt="DALL·E" /></span>
+                        <span class="site-btn__text">MJ</span>
+                        <span class="site-btn__arrow">↗</span>
+                    </a>
+                    <a class="site-btn" href="https://mj.wsq847.dpdns.org/mj67" target="_blank" rel="noopener">
+                        <span class="site-btn__icon"><img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEZyKlqjIvNbJp7bPqmQCMZHHr3l0tuRgAC3yUAAg-uaVRlp-l7WQWatj0E.png" alt="Leonardo.Ai" /></span>
+                        <span class="site-btn__text">MJ</span>
+                        <span class="site-btn__arrow">↗</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- ========== 工具板块 ========== -->
+            <div class="section-card glass" id="tools">
+                <div class="section-card__header">
+                    <div class="section-card__icon section-card__icon--tools">
+                        <img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEZyKlqjIvNbJp7bPqmQCMZHHr3l0tuRgAC3yUAAg-uaVRlp-l7WQWatj0E.png" alt="工具" />
+                    </div>
+                    <div>
+                        <div class="section-card__title">工具(没有一点用)</div>
+                        <div class="section-card__desc"></div>
+                    </div>
+                </div>
+                <div class="section-card__body">
+                    <a class="site-btn" href="https://www.canva.com" target="_blank" rel="noopener">
+                        <span class="site-btn__icon"><img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEZyKlqjIvNbJp7bPqmQCMZHHr3l0tuRgAC3yUAAg-uaVRlp-l7WQWatj0E.png" alt="Canva" /></span>
+                        <span class="site-btn__text">Canva 设计</span>
+                        <span class="site-btn__arrow">↗</span>
+                    </a>
+                    <a class="site-btn" href="https://www.figma.com" target="_blank" rel="noopener">
+                        <span class="site-btn__icon"><img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEZyKlqjIvNbJp7bPqmQCMZHHr3l0tuRgAC3yUAAg-uaVRlp-l7WQWatj0E.png" alt="Figma" /></span>
+                        <span class="site-btn__text">Figma 原型</span>
+                        <span class="site-btn__arrow">↗</span>
+                    </a>
+                    <a class="site-btn" href="https://www.notion.so" target="_blank" rel="noopener">
+                        <span class="site-btn__icon"><img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEZyKlqjIvNbJp7bPqmQCMZHHr3l0tuRgAC3yUAAg-uaVRlp-l7WQWatj0E.png" alt="Notion" /></span>
+                        <span class="site-btn__text">Notion 笔记</span>
+                        <span class="site-btn__arrow">↗</span>
+                    </a>
+                    <a class="site-btn" href="https://smallpdf.com" target="_blank" rel="noopener">
+                        <span class="site-btn__icon"><img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEZyKlqjIvNbJp7bPqmQCMZHHr3l0tuRgAC3yUAAg-uaVRlp-l7WQWatj0E.png" alt="Smallpdf" /></span>
+                        <span class="site-btn__text">Smallpdf 转换</span>
+                        <span class="site-btn__arrow">↗</span>
+                    </a>
+                    <a class="site-btn" href="https://www.remove.bg" target="_blank" rel="noopener">
+                        <span class="site-btn__icon"><img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEZyKlqjIvNbJp7bPqmQCMZHHr3l0tuRgAC3yUAAg-uaVRlp-l7WQWatj0E.png" alt="Remove.bg" /></span>
+                        <span class="site-btn__text">Remove.bg 抠图</span>
+                        <span class="site-btn__arrow">↗</span>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ==================== 页脚 ==================== -->
+    <footer class="footer">
+        <p>mj</p>
+    </footer>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // 导航栏时钟
+            function updateClock() {
+                const now = new Date();
+                const h = String(now.getHours()).padStart(2, '0');
+                const m = String(now.getMinutes()).padStart(2, '0');
+                const s = String(now.getSeconds()).padStart(2, '0');
+                const clockEl = document.getElementById('clock');
+                if (clockEl) clockEl.textContent = `${h}:${m}:${s}`;
+            }
+            updateClock();
+            setInterval(updateClock, 1000);
+
+            // ==================== 卡片鼠标跟随高光与3D重力倾斜 ====================
+            const cards = document.querySelectorAll('.glass');
+            
+            cards.forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    // 计算鼠标相对于卡片的位置（百分比）
+                    const mouseX = ((e.clientX - rect.left) / rect.width) * 100;
+                    const mouseY = ((e.clientY - rect.top) / rect.height) * 100;
+                    
+                    // 设置CSS变量用于高光位置
+                    card.style.setProperty('--mouse-x', mouseX + '%');
+                    card.style.setProperty('--mouse-y', mouseY + '%');
+                    
+                    // 计算旋转角度（-6deg 到 6deg）
+                    const rotateY = ((mouseX / 100) - 0.5) * 12;  // -6 到 6
+                    const rotateX = ((mouseY / 100) - 0.5) * -12; // 反转Y轴，让鼠标在上方时卡片向后倾斜
+                    
+                    card.style.setProperty('--rotate-x', rotateX + 'deg');
+                    card.style.setProperty('--rotate-y', rotateY + 'deg');
+                    
+                    // 加入轻微下沉和放大（重力感）
+                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(4px) scale(1.02)`;
+                });
+                
+                card.addEventListener('mouseleave', () => {
+                    // 重置变量和变换
+                    card.style.setProperty('--mouse-x', '30%');
+                    card.style.setProperty('--mouse-y', '20%');
+                    card.style.setProperty('--rotate-x', '0deg');
+                    card.style.setProperty('--rotate-y', '0deg');
+                    card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0) scale(1)';
+                });
+            });
+        })();
+    </script>
+</body>
+</html>
