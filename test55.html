@@ -804,12 +804,60 @@
             min-height: 320px;
         }
 
+        .content-section {
+            --lift-x: 0px;
+            --lift-y: 0px;
+            --shine-opacity: 0;
+            --shine-x: 50%;
+            --shine-y: 50%;
+
+            transition:
+                background 0.3s ease,
+                box-shadow 0.3s ease,
+                transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .content-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            z-index: 4;
+
+            opacity: var(--shine-opacity);
+
+            background:
+                radial-gradient(
+                    circle 220px at var(--shine-x) var(--shine-y),
+                    rgba(255, 255, 255, 0.42),
+                    rgba(255, 255, 255, 0.16) 28%,
+                    rgba(255, 255, 255, 0) 70%
+                );
+
+            mix-blend-mode: screen;
+
+            transition: opacity 0.12s ease;
+        }
+
         .content-section:hover {
             background:
                 rgba(255, 255, 255, 0.45);
 
             box-shadow:
-                0 12px 36px rgba(0, 0, 0, 0.12);
+                calc(var(--lift-x) * 0.55)
+                calc(12px + var(--lift-y))
+                36px
+                rgba(0, 0, 0, 0.16),
+                0 18px 44px rgba(0, 0, 0, 0.10),
+                0 0 0 1px rgba(255, 255, 255, 0.38);
+
+            transform:
+                translate3d(
+                    calc(var(--lift-x) * 0.18),
+                    calc(var(--lift-y) * 0.18),
+                    0
+                );
         }
 
         .hero-section {
@@ -2308,6 +2356,72 @@
                 document.querySelectorAll(
                     '.content-section'
                 );
+
+            /*
+             * 卡片悬停：轻微模拟重力偏移，高光跟随鼠标。
+             */
+            sections.forEach((section) => {
+                section.addEventListener('pointermove', (event) => {
+                    const rect = section.getBoundingClientRect();
+
+                    const x = event.clientX - rect.left;
+                    const y = event.clientY - rect.top;
+
+                    const nx = (x / rect.width) * 2 - 1;
+                    const ny = (y / rect.height) * 2 - 1;
+
+                    const maxShift = 6;
+
+                    section.style.setProperty(
+                        '--lift-x',
+                        `${nx * maxShift}px`
+                    );
+
+                    section.style.setProperty(
+                        '--lift-y',
+                        `${ny * maxShift}px`
+                    );
+
+                    section.style.setProperty(
+                        '--shine-x',
+                        `${x}px`
+                    );
+
+                    section.style.setProperty(
+                        '--shine-y',
+                        `${y}px`
+                    );
+
+                    section.style.setProperty(
+                        '--shine-opacity',
+                        '1'
+                    );
+                });
+
+                section.addEventListener('pointerenter', () => {
+                    section.style.setProperty(
+                        '--shine-opacity',
+                        '1'
+                    );
+                });
+
+                section.addEventListener('pointerleave', () => {
+                    section.style.setProperty(
+                        '--lift-x',
+                        '0px'
+                    );
+
+                    section.style.setProperty(
+                        '--lift-y',
+                        '0px'
+                    );
+
+                    section.style.setProperty(
+                        '--shine-opacity',
+                        '0'
+                    );
+                });
+            });
 
             const observer =
                 new IntersectionObserver(
