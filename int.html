@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全屏随机动图</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+        img {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover; /* 或者 contain，根据需求 */
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <img id="fullscreen-gif" src="" alt="随机动图">
+
+    <script>
+        // 使用相对路径，指向自己项目内的 GIF 文件
+        const links = [
+            './intern_cra.gif'
+           
+        ];
+
+        const img = document.getElementById('fullscreen-gif');
+        let currentIndex = Math.floor(Math.random() * links.length);
+
+        function loadGif(index) {
+            img.onload = function() {
+                console.log('✅ GIF 加载成功:', links[index]);
+                currentIndex = index;
+            };
+            img.onerror = function() {
+                console.warn('❌ GIF 加载失败，尝试另一个:', links[index]);
+                const nextIndex = (index + 1) % links.length;
+                if (nextIndex !== index) {
+                    loadGif(nextIndex);
+                } else {
+                    console.error('所有图片均无法加载，请检查文件路径');
+                }
+            };
+            img.src = links[index];
+        }
+
+        window.onload = function() {
+            loadGif(currentIndex);
+        };
+    </script>
+</body>
+</html>
