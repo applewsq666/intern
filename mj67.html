@@ -22,44 +22,41 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            object-fit: cover;      /* 填满全屏，裁剪多余部分；如需完整显示可改为 contain */
+            object-fit: cover; /* 或者 contain，根据需求 */
             display: block;
-            background: #000;
         }
     </style>
 </head>
 <body>
-    <img id="fullscreen-gif" src="" alt="随机动图" referrerpolicy="no-referrer">
+    <img id="fullscreen-gif" src="" alt="随机动图">
 
     <script>
-        // ✏️ 你的两个动图链接（已拆分，请确保能直接访问）
+        // 使用相对路径，指向自己项目内的 GIF 文件
         const links = [
-            'https://img.remit.ee/api/file/CgACAgUAAyEGAASHRsPbAAEZyURqjMIy81Ah38fD1jczG_4-aUflpQACmSYAAg-uaVRovl1SmLDrZD0E.gif',
-            'https://img.remit.ee/api/file/CgACAgUAAyEGAASHRsPbAAEZyUFqjMCdA4Vk1V9pt3i1cFmQH4rxEQACliYAAg-uaVRZ2AL96v1eZT0E.gif'
+            './images/gif1.gif',
+            './images/gif2.gif'
         ];
 
         const img = document.getElementById('fullscreen-gif');
         let currentIndex = Math.floor(Math.random() * links.length);
 
-        // 加载指定索引的动图，失败自动切换另一个
         function loadGif(index) {
             img.onload = function() {
                 console.log('✅ GIF 加载成功:', links[index]);
                 currentIndex = index;
             };
             img.onerror = function() {
-                console.warn('❌ GIF 加载失败，尝试另一个链接:', links[index]);
+                console.warn('❌ GIF 加载失败，尝试另一个:', links[index]);
                 const nextIndex = (index + 1) % links.length;
                 if (nextIndex !== index) {
                     loadGif(nextIndex);
                 } else {
-                    console.error('所有链接均无法加载，请检查链接或防盗链设置');
+                    console.error('所有图片均无法加载，请检查文件路径');
                 }
             };
             img.src = links[index];
         }
 
-        // 页面加载时随机播放一个
         window.onload = function() {
             loadGif(currentIndex);
         };
