@@ -8,6 +8,7 @@
         * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
         html, body {
             width: 100%;
@@ -21,8 +22,9 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            object-fit: cover; /* 或 contain，根据需求 */
+            object-fit: cover;      /* 填满全屏，裁剪多余部分；如需完整显示可改为 contain */
             display: block;
+            background: #000;
         }
     </style>
 </head>
@@ -30,30 +32,37 @@
     <img id="fullscreen-gif" src="" alt="随机动图" referrerpolicy="no-referrer">
 
     <script>
-        // ✏️ 修改为你的两个动图链接
+        // ✏️ 你的两个动图链接（已拆分，请确保能直接访问）
         const links = [
             'https://img.remit.ee/api/file/CgACAgUAAyEGAASHRsPbAAEZyURqjMIy81Ah38fD1jczG_4-aUflpQACmSYAAg-uaVRovl1SmLDrZD0E.gif',
-            'https://img.remit.ee/api/file/CgACAgUAAyEGAASHRsPbAAEZyUBqjMB2dhwuNFP7Zimu1xdaNqZU7gAClSYAAg-uaVSKFQHTNw6v3T0E.gif'
+            'https://img.remit.ee/api/file/CgACAgUAAyEGAASHRsPbAAEZyUFqjMCdA4Vk1V9pt3i1cFmQH4rxEQACliYAAg-uaVRZ2AL96v1eZT0E.gif'
         ];
 
         const img = document.getElementById('fullscreen-gif');
+        let currentIndex = Math.floor(Math.random() * links.length);
 
-        img.onload = function() {
-            console.log('✅ GIF 加载成功，当前链接：', img.src);
-        };
-
-        img.onerror = function() {
-            console.error('❌ GIF 加载失败，当前链接：', img.src);
-            // 可以自动尝试另一个链接
-        };
-
-        // 随机选择一个链接并加载
-        function loadRandomGif() {
-            const randomIndex = Math.floor(Math.random() * links.length);
-            img.src = links[randomIndex];
+        // 加载指定索引的动图，失败自动切换另一个
+        function loadGif(index) {
+            img.onload = function() {
+                console.log('✅ GIF 加载成功:', links[index]);
+                currentIndex = index;
+            };
+            img.onerror = function() {
+                console.warn('❌ GIF 加载失败，尝试另一个链接:', links[index]);
+                const nextIndex = (index + 1) % links.length;
+                if (nextIndex !== index) {
+                    loadGif(nextIndex);
+                } else {
+                    console.error('所有链接均无法加载，请检查链接或防盗链设置');
+                }
+            };
+            img.src = links[index];
         }
 
-        window.onload = loadRandomGif;
+        // 页面加载时随机播放一个
+        window.onload = function() {
+            loadGif(currentIndex);
+        };
     </script>
 </body>
 </html>
